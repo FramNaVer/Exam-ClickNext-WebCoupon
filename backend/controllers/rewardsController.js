@@ -11,8 +11,11 @@ exports.getAllRewards = async (req, res, next) => {
 
 exports.getRewardById = async (req, res, next) => {
     try {
-        const rewardId = parseInt(req.params.id);
-        const reward = await rewardService.getAllRewardsById(rewardId);
+        const rewardId = parseInt(req.params.id,10);
+        if (isNaN(rewardId)) {
+            return res.status(400).json({ success: false, message: 'Invalid reward ID' });
+        }
+        const reward = await rewardService.getRewardsById(rewardId);
         return res.json({ success: true, reward });
     }catch (error) {
         next(error);

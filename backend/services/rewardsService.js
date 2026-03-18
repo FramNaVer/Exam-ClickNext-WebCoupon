@@ -23,7 +23,7 @@ exports.getAllRewards = async () => {
 }
 
 //Get reward details by ID
-exports.getAllRewardsById = async (rewardId) => {
+exports.getRewardsById = async (rewardId) => {
     const reward = await prisma.reward.findUnique({
         where: {id: rewardId},
         select: {
