@@ -70,10 +70,11 @@ async function main() {
     ];
 
     for (const r of rewards) {
-        await prisma.reward.create({
-            data: r
+        await prisma.reward.upsert({
+            where: { title: r.title },
+            update: r,
+            create: r,
         });
-            
     }
 
     console.log('Rewards seeded successfully');
