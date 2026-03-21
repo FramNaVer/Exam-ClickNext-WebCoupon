@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const { PrismaPg } = require('@prisma/adapter-pg');
+const bcrypt = require('bcrypt');
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -78,8 +79,23 @@ async function main() {
     }
 
     console.log('Rewards seeded successfully');
-}
 
+    const users = [
+        { username: 'testuser1', password: 'password123', points: 1000 },
+        { username: 'testuser2', password: 'password123', points: 250 },
+    ];
+
+    for (const u of users) {
+        const hashed = await bcrypt.hash(u.password, 10);
+        await prisma.user.upsert({
+            where: { username: u.username },
+            update: { points: u.points },
+            create: { username: u.username, password: hashed, points: u.points },
+        });
+    }
+
+    console.log('Users seeded successfully');
+}
 main()
     .catch((e) => {
         console.error(e);
