@@ -1,10 +1,12 @@
 <script setup>
-
+const authStore = useAuthStore()
+onMounted(() => {
+  authStore.fetchCurrentUser()
+})
 </script>
 
 <template>
-  <div>
-    <Navbar />
+  <NuxtLayout>
     <NuxtPage />
-  </div>
+  </NuxtLayout>
 </template>
