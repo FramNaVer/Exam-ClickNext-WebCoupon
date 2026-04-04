@@ -126,6 +126,13 @@ onUnmounted(() => clearInterval(timer))
                         Sign In
                     </UButton>
                 </form>
+
+                <p class="text-center text-sm text-zinc-500 mt-6">
+                    Don't have an account?
+                    <NuxtLink to="/register" class="text-zinc-900 dark:text-white font-medium hover:underline">
+                        Register
+                    </NuxtLink>
+                </p>
             </div>
         </div>
     </div>
