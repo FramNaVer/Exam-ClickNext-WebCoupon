@@ -19,7 +19,7 @@ onMounted(fetchRewards)
             <!-- Loading -->
             <div v-if="loading" class="grid grid-cols-3 gap-3">
                 <div v-for="i in 6" :key="i" class="bg-white rounded-2xl overflow-hidden animate-pulse">
-                    <div class="w-full aspect-[4/3] bg-zinc-100" />
+                    <div class="w-full aspect-4/3 bg-zinc-100" />
                     <div class="p-3 space-y-2">
                         <div class="h-3 bg-zinc-100 rounded w-3/4 mx-auto" />
                         <div class="h-3 bg-zinc-100 rounded w-1/2 mx-auto" />
