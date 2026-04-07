@@ -4,7 +4,7 @@ definePageMeta({ middleware: 'auth' })
 const route = useRoute()
 const authStore = useAuthStore()
 const { currentReward, loading, error, fetchReward } = useRewards()
-const redeem = useRedeem()
+const { loading: redeemLoading, error: redeemError, success: redeemSuccess, showConfirm, openConfirm, cancelConfirm, confirm: confirmRedeem } = useRedeem()
 
 onMounted(() => fetchReward(Number(route.params.id)))
 
@@ -97,17 +97,17 @@ const isOutOfStock = computed(() => currentReward.value !== null && currentRewar
             </div>
 
             <!-- Feedback -->
-            <UAlert v-if="redeem.success.value" color="success" variant="soft" :description="redeem.success.value" />
-            <UAlert v-if="redeem.error.value" color="error" variant="soft" :description="redeem.error.value" />
+            <UAlert v-if="redeemSuccess" color="success" variant="soft" :description="redeemSuccess" />
+            <UAlert v-if="redeemError" color="error" variant="soft" :description="redeemError" />
 
             <!-- Redeem button -->
-            <div v-if="!redeem.success.value">
+            <div v-if="!redeemSuccess">
                 <UButton
-                    v-if="!redeem.showConfirm.value"
+                    v-if="!showConfirm"
                     block
                     size="lg"
                     :disabled="!canAfford || isOutOfStock"
-                    @click="redeem.openConfirm()"
+                    @click="openConfirm()"
                 >
                     {{ isOutOfStock ? 'Out of Stock' : !canAfford ? 'Not Enough Points' : 'Redeem Reward' }}
                 </UButton>
@@ -118,8 +118,8 @@ const isOutOfStock = computed(() => currentReward.value !== null && currentRewar
                         Confirm redeem "{{ currentReward.title }}" for {{ currentReward.points_required.toLocaleString() }} pts?
                     </p>
                     <div class="flex gap-3">
-                        <UButton block variant="outline" @click="redeem.cancelConfirm()">Cancel</UButton>
-                        <UButton block :loading="redeem.loading.value" @click="redeem.confirm(currentReward.id)">Confirm</UButton>
+                        <UButton block variant="outline" @click="cancelConfirm()">Cancel</UButton>
+                        <UButton block :loading="redeemLoading" @click="confirmRedeem(currentReward.id)">Confirm</UButton>
                     </div>
                 </div>
             </div>
