@@ -1,49 +1,33 @@
 version: '3.8'
 
 services:
-  # ─── Database ───────────────────────────────────────────
-  db:
-    image: postgres:16-alpine
-    container_name: coupon_db
+  # ─── Backend (Express) ──────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: coupon_backend
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 8080
     ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - '8080:8080'
     networks:
       - coupon_network
 
-  # ─── Backend (Express) ──────────────────────────────────
-  # backend:
-  #   build: ./backend
-  #   container_name: coupon_backend
-  #   restart: unless-stopped
-  #   env_file: ./backend/.env
-  #   ports:
-  #     - '8080:8080'
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - coupon_network
-
   # ─── Frontend (Nuxt) ────────────────────────────────────
-  # frontend:
-  #   build: ./nuxt-app
-  #   container_name: coupon_frontend
-  #   restart: unless-stopped
-  #   ports:
-  #     - '3000:3000'
-  #   depends_on:
-  #     - backend
-  #   networks:
-  #     - coupon_network
-
-volumes:
-  postgres_data:
+  frontend:
+    build: ./nuxt-app
+    container_name: coupon_frontend
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL:-http://backend:8080}
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+    networks:
+      - coupon_network
 
 networks:
   coupon_network:
