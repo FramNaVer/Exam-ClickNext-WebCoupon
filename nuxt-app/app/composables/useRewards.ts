@@ -53,15 +53,13 @@ export const useRewards = () => {
     }
 
     async function redeemReward(id: number): Promise<RedeemResult> {
-        const data = await apiFetch<{ success: boolean; message: string; data: { remainingPoints: number } }>(
-            `/api/redeem`,
-            { method: 'POST', body: { rewardId: id } }
+        const data = await apiFetch<{ success: boolean; message: string; data: object }>(
+            `/api/redeem/${id}`,
+            { method: 'POST' }
         )
-        // Update user points in auth store
-        if (authStore.user) {
-            authStore.user = { ...authStore.user, points: data.data.remainingPoints }
-        }
-        return { success: data.success, message: data.message, remainingPoints: data.data.remainingPoints }
+        // Refetch user to get updated points
+        await authStore.fetchCurrentUser()
+        return { success: data.success, message: data.message, remainingPoints: authStore.user?.points ?? 0 }
     }
 
     return { rewards, currentReward, loading, error, fetchRewards, fetchReward, redeemReward }

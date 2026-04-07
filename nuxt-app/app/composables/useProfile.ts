@@ -1,9 +1,13 @@
 interface RedemptionHistory {
     id: number
-    rewardId: number
-    rewardName: string
-    pointsSpent: number
-    redeemedAt: string
+    reward_id: number
+    redeemed_points: number
+    redeemed_at: string
+    reward: {
+        id: number
+        title: string
+        image_url?: string
+    }
 }
 
 export const useProfile = () => {
@@ -17,7 +21,7 @@ export const useProfile = () => {
         loading.value = true
         error.value = ''
         try {
-            const data = await apiFetch<{ success: boolean; data: RedemptionHistory[] }>('/api/user/history')
+            const data = await apiFetch<{ success: boolean; data: RedemptionHistory[] }>('/api/redeem/history')
             history.value = data.data
         } catch (e: any) {
             error.value = e?.data?.message || 'Failed to load history'

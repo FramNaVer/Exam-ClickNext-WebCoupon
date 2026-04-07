@@ -9,39 +9,44 @@ onMounted(fetchRewards)
 
 <template>
     <div class="min-h-screen bg-gray-50">
-        <!-- Header -->
-        <div class="bg-white border-b border-zinc-100 px-4 pt-10 pb-6">
-            <div class="max-w-lg mx-auto">
-                <p class="text-sm text-zinc-500">Welcome back,</p>
-                <h1 class="text-2xl font-bold text-zinc-900 mt-0.5">
-                    {{ authStore.user?.username }}
-                </h1>
-                <!-- Points card -->
-                <div class="mt-4 bg-zinc-900 rounded-2xl p-5 flex items-center justify-between">
-                    <div>
-                        <p class="text-zinc-400 text-sm">Your Points</p>
-                        <p class="text-white text-3xl font-bold mt-1">
-                            {{ authStore.user?.points?.toLocaleString() ?? '—' }}
-                        </p>
+        <!-- Navbar -->
+        <div class="bg-white border-b border-zinc-100 px-6 pt-5 pb-3 sticky top-0 z-10 ">
+            <div class="flex items-center justify-between">
+                <!-- Left: App name -->
+                <div class="flex items-center gap-2 px-2">
+                    <div class="bg-zinc-900 rounded-xl p-1.5">
+                        <UIcon name="i-heroicons-sparkles" class="w-5 h-5 text-yellow-400" />
                     </div>
-                    <div class="bg-zinc-800 rounded-xl p-3">
-                        <UIcon name="i-heroicons-star" class="w-8 h-8 text-yellow-400" />
+                    <span class="text-lg font-bold text-zinc-900 tracking-tight">SnapReward</span>
+                </div>
+                <!-- Right: Username + Points -->
+                <div class="flex items-center gap-3 px-2">
+                    <div class="text-right">
+                        <p class="text-xs text-zinc-400 leading-none">Welcome back,</p>
+                        <p class="text-sm font-semibold text-zinc-900 leading-tight">{{ authStore.user?.username }}</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-zinc-900 rounded-xl px-3 py-1.5">
+                        <UIcon name="i-heroicons-star-solid" class="w-4 h-4 text-yellow-400" />
+                        <span class="text-white font-bold text-sm">{{ authStore.user?.points?.toLocaleString() ?? '—' }}</span>
+                        <span class="text-zinc-400 text-xs">pts</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Rewards list -->
-        <div class="max-w-lg mx-auto px-4 py-6">
+        <div class="max-w-xl mx-auto px-4 py-6">
             <h2 class="text-lg font-semibold text-zinc-900 mb-4">Available Rewards</h2>
 
             <!-- Loading -->
-            <div v-if="loading" class="space-y-3">
-                <div
-                    v-for="i in 4"
-                    :key="i"
-                    class="bg-white rounded-2xl h-24 animate-pulse"
-                />
+            <div v-if="loading" class="grid grid-cols-2 gap-4">
+                <div v-for="i in 4" :key="i" class="bg-white rounded-2xl overflow-hidden animate-pulse">
+                    <div class="w-full aspect-[4/3] bg-zinc-100" />
+                    <div class="p-4 space-y-2">
+                        <div class="h-4 bg-zinc-100 rounded w-3/4 mx-auto" />
+                        <div class="h-3 bg-zinc-100 rounded w-1/2 mx-auto" />
+                    </div>
+                </div>
             </div>
 
             <!-- Error -->
@@ -63,7 +68,7 @@ onMounted(fetchRewards)
             </div>
 
             <!-- List -->
-            <div v-else class="grid grid-cols-3 gap-3">
+            <div v-else class="grid grid-cols-2 gap-4">
                 <NuxtLink
                     v-for="reward in rewards"
                     :key="reward.id"
@@ -77,11 +82,11 @@ onMounted(fetchRewards)
                             :alt="reward.title"
                             class="w-full h-full object-cover"
                         />
-                        <UIcon v-else name="i-heroicons-gift" class="w-8 h-8 text-zinc-400" />
+                        <UIcon v-else name="i-heroicons-gift" class="w-10 h-10 text-zinc-400" />
                     </div>
-                    <div class="p-3 text-center flex flex-col flex-1">
+                    <div class="p-4 text-center flex flex-col flex-1">
                         <p class="font-semibold text-zinc-900 text-sm leading-tight line-clamp-2 flex-1">{{ reward.title }}</p>
-                        <p class="text-xs font-bold text-zinc-900 mt-2">{{ reward.points_required.toLocaleString() }} <span class="font-normal text-zinc-400">pts</span></p>
+                        <p class="text-sm font-bold text-zinc-900 mt-2">{{ reward.points_required.toLocaleString() }} <span class="font-normal text-zinc-400 text-xs">pts</span></p>
                     </div>
                 </NuxtLink>
             </div>
