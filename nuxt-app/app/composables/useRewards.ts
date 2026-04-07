@@ -1,9 +1,13 @@
 interface Reward {
     id: number
-    name: string
+    title: string
     description: string
-    pointsRequired: number
-    imageUrl?: string
+    points_required: number
+    image_url?: string
+    expiry_date?: string
+    redeem_start_date?: string
+    redeem_end_date?: string
+    terms_condition?: string
     stock: number
 }
 
@@ -26,8 +30,8 @@ export const useRewards = () => {
         loading.value = true
         error.value = ''
         try {
-            const data = await apiFetch<{ success: boolean; data: Reward[] }>('/api/rewards')
-            rewards.value = data.data
+            const data = await apiFetch<{ success: boolean; rewards: Reward[] }>('/api/rewards')
+            rewards.value = data.rewards
         } catch (e: any) {
             error.value = e?.data?.message || 'Failed to load rewards'
         } finally {
@@ -39,8 +43,8 @@ export const useRewards = () => {
         loading.value = true
         error.value = ''
         try {
-            const data = await apiFetch<{ success: boolean; data: Reward }>(`/api/rewards/${id}`)
-            currentReward.value = data.data
+            const data = await apiFetch<{ success: boolean; reward: Reward }>(`/api/rewards/${id}`)
+            currentReward.value = data.reward
         } catch (e: any) {
             error.value = e?.data?.message || 'Failed to load reward'
         } finally {

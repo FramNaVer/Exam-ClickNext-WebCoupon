@@ -23,11 +23,11 @@ export const useAuthStore = defineStore('auth', () => {
     async function fetchCurrentUser() {
         if (!token.value) return
         try {
-            const data = await $fetch<{ success: boolean; data: User }>(
+            const data = await $fetch<{ success: boolean; user: User }>(
                 `${config.public.apiBaseUrl}/api/user/profile`,
                 { headers: authHeaders() }
             )
-            user.value = data.data
+            user.value = data.user
         } catch {
             token.value = null
             user.value = null
