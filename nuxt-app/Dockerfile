@@ -1,14 +1,14 @@
 # ── Stage 1: deps ──────────────────────────────────────────
 FROM node:22-alpine AS deps
 WORKDIR /app
-COPY package*.json ./
+COPY nuxt-app/package*.json ./
 RUN npm ci
 
 # ── Stage 2: build ─────────────────────────────────────────
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY nuxt-app/ .
 ARG NUXT_PUBLIC_API_BASE_URL
 ENV NUXT_PUBLIC_API_BASE_URL=${NUXT_PUBLIC_API_BASE_URL}
 RUN npm run build
