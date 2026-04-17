@@ -9,6 +9,8 @@ FROM node:22-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG NUXT_PUBLIC_API_BASE_URL
+ENV NUXT_PUBLIC_API_BASE_URL=${NUXT_PUBLIC_API_BASE_URL}
 RUN npm run build
 
 # ── Stage 3: production ────────────────────────────────────
