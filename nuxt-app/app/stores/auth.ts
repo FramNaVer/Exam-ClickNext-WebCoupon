@@ -77,5 +77,5 @@ export const useAuthStore = defineStore('auth', () => {
         navigateTo('/login')
     }
 
-    return { token, user, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, logout }
+    return { token, refreshToken, user, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, logout }
 })
