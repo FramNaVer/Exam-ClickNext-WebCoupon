@@ -13,6 +13,21 @@ export const useApi = () => {
                 },
             })
         } catch (e: any) {
+            // access token หมดอายุ → ลอง refresh แล้วยิงใหม่
+            if (e?.status === 401 && authStore.refreshToken) {
+                try {
+                    await authStore.refresh()
+                    return await $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
+                        ...options,
+                        headers: {
+                            ...authStore.authHeaders(),
+                            ...(options.headers as Record<string, string> | undefined),
+                        },
+                    })
+                } catch {
+                    authStore.logout()
+                }
+            }
             if (e?.status === 401) authStore.logout()
             throw e
         }

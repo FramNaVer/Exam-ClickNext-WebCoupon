@@ -18,3 +18,23 @@ exports.loginUser = async (req, res, next) => {
     }
 };
 
+exports.refreshToken = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
+        const result = await authService.refresh(refreshToken);
+        return res.json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.logoutUser = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
+        const result = await authService.logout(refreshToken);
+        return res.json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+

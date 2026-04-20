@@ -8,15 +8,27 @@ datasource db {
 }
 
 model User {
-  id          Int           @id @default(autoincrement())
-  username    String        @unique
-  password    String
-  points      Int           @default(0)
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @updatedAt
-  redemptions Redemption[]
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  password      String
+  points        Int            @default(0)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  redemptions   Redemption[]
+  refreshTokens RefreshToken[]
 
   @@map("user")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  userId     Int
+  expiresAt  DateTime
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_token")
 }
 
 model Reward {
