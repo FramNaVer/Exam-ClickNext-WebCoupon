@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { generalLimiter, authLimiter } = require('./middleware/ratelimiter');
 
 require('dotenv').config();
@@ -12,6 +13,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+app.use(helmet());
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
     : ['http://localhost:3000'];
