@@ -7,7 +7,7 @@ const SALT_ROUNDS = 10;
 
 function generateAccessToken(user) {
     return jwt.sign(
-        { id: user.id, username: user.username },
+        { id: user.id, username: user.username, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: '15m' }
     );
@@ -29,7 +29,7 @@ exports.register = async ({ username, password }) => {
     if (password.length < 6) {
         throw new AppError('Password must be at least 6 characters', 400);
     }
- 
+
     const existingUser = await prisma.user.findUnique({ where: { username } });
 
     if (existingUser) {
@@ -62,14 +62,7 @@ exports.login = async ({ username, password }) => {
         throw new AppError('Invalid username or password', 401);
     }
 
-    const token = jwt.sign({
-        id: user.id,
-        username: user.username
-    },
-        process.env.JWT_SECRET,
-        { expiresIn: '15m' }
-    );
-
+    const token = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user.id);
 
     return {
