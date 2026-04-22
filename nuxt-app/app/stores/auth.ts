@@ -4,6 +4,7 @@ interface User {
     id: number
     username: string
     points: number
+    role: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
