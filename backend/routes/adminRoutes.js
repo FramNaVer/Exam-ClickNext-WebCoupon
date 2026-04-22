@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware, requireRole } = require('../middleware/authMiddleware');
+const { upload } = require('../middleware/uploadMiddleware');
 const adminController = require('../controllers/adminController');
 
 router.use(authMiddleware, requireRole('admin'));
@@ -12,6 +13,7 @@ router.patch('/users/:id/points', adminController.updateUserPoints);
 
 // Rewards
 router.get('/rewards', adminController.getRewards);
+router.post('/upload-image', upload.single('image'), adminController.uploadImage);
 router.post('/rewards', adminController.createReward);
 router.patch('/rewards/:id', adminController.updateReward);
 router.delete('/rewards/:id', adminController.deleteReward);

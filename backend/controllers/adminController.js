@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const AppError = require('../utils/appError');
+const cloudinary = require('../lib/cloudinary');
 
 // GET /api/admin/users
 exports.getUsers = async (req, res, next) => {
@@ -82,6 +83,42 @@ exports.createReward = async (req, res, next) => {
             },
         });
         res.status(201).json({ success: true, reward });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// POST /api/admin/upload-image
+exports.uploadImage = async (req, res, next) => {
+    try {
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+            throw new AppError('Cloudinary is not configured', 500);
+        }
+
+        if (!req.file) {
+            throw new AppError('Image file is required', 400);
+        }
+
+        const uploadResult = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                {
+                    folder: 'snapreward/rewards',
+                    resource_type: 'image',
+                },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            );
+
+            stream.end(req.file.buffer);
+        });
+
+        res.status(201).json({
+            success: true,
+            image_url: uploadResult.secure_url,
+            public_id: uploadResult.public_id,
+        });
     } catch (error) {
         next(error);
     }

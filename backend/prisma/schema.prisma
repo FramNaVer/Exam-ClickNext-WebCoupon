@@ -40,6 +40,7 @@ model Reward {
   description       String
   points_required   Int
   image_url         String
+  public_id         String?
   expiry_date       DateTime
   redeem_start_date DateTime
   redeem_end_date   DateTime
