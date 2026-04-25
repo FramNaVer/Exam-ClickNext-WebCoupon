@@ -13,9 +13,8 @@ router.patch('/users/:id/points', adminController.updateUserPoints);
 
 // Rewards
 router.get('/rewards', adminController.getRewards);
-router.post('/upload-image', upload.single('image'), adminController.uploadImage);
-router.post('/rewards', adminController.createReward);
-router.patch('/rewards/:id', adminController.updateReward);
+router.post('/rewards', upload.single('image'), adminController.createReward);
+router.patch('/rewards/:id', upload.single('image'), adminController.updateReward);
 router.delete('/rewards/:id', adminController.deleteReward);
 
 module.exports = router;

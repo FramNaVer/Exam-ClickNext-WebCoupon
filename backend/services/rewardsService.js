@@ -52,23 +52,54 @@ exports.getAllRewardsForAdmin = async () => {
 };
 
 exports.createReward = async (rewardData) => {
-    const { expiry_date, redeem_start_date, redeem_end_date, ...rest } = rewardData;
+    const { expiry_date, redeem_start_date, redeem_end_date, points_required, stock, ...rest } = rewardData;
+
+    // Convert numeric fields from string to number and validate
+    const numericPoints = points_required !== undefined ? parseInt(points_required, 10) : undefined;
+    const numericStock = stock !== undefined ? parseInt(stock, 10) : undefined;
+
+    if (points_required !== undefined && (isNaN(numericPoints) || numericPoints < 0)) {
+        throw new AppError('Points required must be a valid non-negative number.', 400);
+    }
+    if (stock !== undefined && (isNaN(numericStock) || numericStock < 0)) {
+        throw new AppError('Stock must be a valid non-negative number.', 400);
+    }
 
     const data = {
         ...rest,
+        ...(numericPoints !== undefined && { points_required: numericPoints }),
+        ...(numericStock !== undefined && { stock: numericStock }),
         ...(expiry_date && { expiry_date: new Date(expiry_date) }),
         ...(redeem_start_date && { redeem_start_date: new Date(redeem_start_date) }),
         ...(redeem_end_date && { redeem_end_date: new Date(redeem_end_date) }),
     };
 
+    // Basic validation for required fields
+    if (!data.title || data.points_required === undefined) {
+        throw new AppError('Title and points_required are mandatory fields.', 400);
+    }
+
     return prisma.reward.create({ data });
 };
 
 exports.updateReward = async (rewardId, rewardData) => {
-    const { expiry_date, redeem_start_date, redeem_end_date, ...rest } = rewardData;
+    const { expiry_date, redeem_start_date, redeem_end_date, points_required, stock, ...rest } = rewardData;
+
+    // Convert numeric fields from string to number and validate
+    const numericPoints = points_required !== undefined ? parseInt(points_required, 10) : undefined;
+    const numericStock = stock !== undefined ? parseInt(stock, 10) : undefined;
+
+    if (points_required !== undefined && (isNaN(numericPoints) || numericPoints < 0)) {
+        throw new AppError('Points required must be a valid non-negative number.', 400);
+    }
+    if (stock !== undefined && (isNaN(numericStock) || numericStock < 0)) {
+        throw new AppError('Stock must be a valid non-negative number.', 400);
+    }
 
     const data = {
         ...rest,
+        ...(numericPoints !== undefined && { points_required: numericPoints }),
+        ...(numericStock !== undefined && { stock: numericStock }),
         ...(expiry_date && { expiry_date: new Date(expiry_date) }),
         ...(redeem_start_date && { redeem_start_date: new Date(redeem_start_date) }),
         ...(redeem_end_date && { redeem_end_date: new Date(redeem_end_date) }),

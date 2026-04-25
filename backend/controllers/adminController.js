@@ -1,8 +1,7 @@
-const prisma = require('../lib/prisma');
 const AppError = require('../utils/appError');
-const cloudinary = require('../lib/cloudinary');
 const adminService = require('../services/adminService'); // For user management
 const rewardsService = require('../services/rewardsService'); // For reward management
+const uploadService = require('../services/uploadService'); // For image uploads
 
 // GET /api/admin/users
 exports.getUsers = async (req, res, next) => {
@@ -51,44 +50,17 @@ exports.getRewards = async (req, res, next) => {
 // POST /api/admin/rewards
 exports.createReward = async (req, res, next) => {
     try {
-        const reward = await rewardsService.createReward(req.body);
+        const rewardData = { ...req.body };
+
+        // If a file is uploaded, upload it to Cloudinary and get the URL
+        if (req.file) {
+            const uploadResult = await uploadService.uploadImageStream(req.file);
+            rewardData.image_url = uploadResult.secure_url;
+            rewardData.public_id = uploadResult.public_id;
+        }
+
+        const reward = await rewardsService.createReward(rewardData);
         res.status(201).json({ success: true, reward });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// POST /api/admin/upload-image
-exports.uploadImage = async (req, res, next) => {
-    try {
-        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-            throw new AppError('Cloudinary is not configured', 500);
-        }
-
-        if (!req.file) {
-            throw new AppError('Image file is required', 400);
-        }
-
-        const uploadResult = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'snapreward/rewards',
-                    resource_type: 'image',
-                },
-                (error, result) => {
-                    if (error) return reject(error);
-                    resolve(result);
-                }
-            );
-
-            stream.end(req.file.buffer);
-        });
-
-        res.status(201).json({
-            success: true,
-            image_url: uploadResult.secure_url,
-            public_id: uploadResult.public_id,
-        });
     } catch (error) {
         next(error);
     }
@@ -98,7 +70,24 @@ exports.uploadImage = async (req, res, next) => {
 exports.updateReward = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const reward = await rewardsService.updateReward(id, req.body);
+        const rewardData = { ...req.body };
+
+        if (req.file) {
+            // To prevent orphaned images, first find the existing reward
+            const existingReward = await rewardsService.getRewardsById(Number(id));
+
+            // Then, upload the new image
+            const uploadResult = await uploadService.uploadImageStream(req.file);
+            rewardData.image_url = uploadResult.secure_url;
+            rewardData.public_id = uploadResult.public_id;
+
+            // If the old reward had an image, delete it from Cloudinary
+            if (existingReward && existingReward.public_id) {
+                await uploadService.deleteImage(existingReward.public_id);
+            }
+        }
+
+        const reward = await rewardsService.updateReward(id, rewardData);
         res.json({ success: true, reward });
     } catch (error) {
         next(error);
@@ -109,6 +98,13 @@ exports.updateReward = async (req, res, next) => {
 exports.deleteReward = async (req, res, next) => {
     try {
         const { id } = req.params;
+
+        // Fetch the reward to get its public_id before deleting from DB
+        const rewardToDelete = await rewardsService.getRewardsById(Number(id));
+        if (rewardToDelete && rewardToDelete.public_id) {
+            await uploadService.deleteImage(rewardToDelete.public_id);
+        }
+
         await rewardsService.deleteReward(id);
         res.json({ success: true, message: 'Reward deleted' });
     } catch (error) {
