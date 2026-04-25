@@ -46,3 +46,40 @@ exports.getRewardsById = async (rewardId) => {
 
     return reward;
 }
+
+exports.getAllRewardsForAdmin = async () => {
+    return prisma.reward.findMany({ orderBy: { created_at: 'desc' } });
+};
+
+exports.createReward = async (rewardData) => {
+    const { expiry_date, redeem_start_date, redeem_end_date, ...rest } = rewardData;
+
+    const data = {
+        ...rest,
+        ...(expiry_date && { expiry_date: new Date(expiry_date) }),
+        ...(redeem_start_date && { redeem_start_date: new Date(redeem_start_date) }),
+        ...(redeem_end_date && { redeem_end_date: new Date(redeem_end_date) }),
+    };
+
+    return prisma.reward.create({ data });
+};
+
+exports.updateReward = async (rewardId, rewardData) => {
+    const { expiry_date, redeem_start_date, redeem_end_date, ...rest } = rewardData;
+
+    const data = {
+        ...rest,
+        ...(expiry_date && { expiry_date: new Date(expiry_date) }),
+        ...(redeem_start_date && { redeem_start_date: new Date(redeem_start_date) }),
+        ...(redeem_end_date && { redeem_end_date: new Date(redeem_end_date) }),
+    };
+
+    return prisma.reward.update({
+        where: { id: Number(rewardId) },
+        data,
+    });
+};
+
+exports.deleteReward = async (rewardId) => {
+    return prisma.reward.delete({ where: { id: Number(rewardId) } });
+};
