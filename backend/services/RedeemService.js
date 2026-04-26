@@ -21,7 +21,10 @@ exports.redeemReward = async (userId, rewardId) => {
     }
 
     const currentDate = new Date();
-    if (currentDate < reward.redeem_start_date || currentDate > reward.redeem_end_date) {
+    if (reward.redeem_start_date && currentDate < reward.redeem_start_date) {
+        throw new AppError('Reward is not redeemable at this time', 400);
+    }
+    if (reward.redeem_end_date && currentDate > reward.redeem_end_date) {
         throw new AppError('Reward is not redeemable at this time', 400);
     }
 

@@ -254,4 +254,105 @@ describe('RedeemService: redeemReward', () => {
             new Error('Transaction failed')
         );
     });
+
+    // Edge case: null redeem_start_date should allow redemption (treat as no start limit)
+    test('should allow redemption when redeem_start_date is null', async () => {
+        jest.setSystemTime(new Date('2025-06-15T10:00:00.000Z'));
+
+        const mockReward = {
+            id: 1,
+            points_required: 20,
+            stock: 10,
+            redeem_start_date: null, // No start date limit
+            redeem_end_date: new Date('2029-12-31'),
+        };
+        const mockUser = { points: 100 };
+
+        prisma.reward.findUnique.mockResolvedValue(mockReward);
+        prisma.user.findUnique.mockResolvedValue(mockUser);
+        prisma.redemption.findUnique.mockResolvedValue(null);
+        prisma.$transaction.mockResolvedValue([{}, {}, { id: 1 }]);
+
+        const result = await RedeemService.redeemReward(1, 1);
+        expect(result).toBeDefined();
+    });
+
+    // Edge case: null redeem_end_date should allow redemption (treat as no end limit)
+    test('should allow redemption when redeem_end_date is null', async () => {
+        jest.setSystemTime(new Date('2025-06-15T10:00:00.000Z'));
+
+        const mockReward = {
+            id: 1,
+            points_required: 20,
+            stock: 10,
+            redeem_start_date: new Date('2024-01-01'),
+            redeem_end_date: null, // No end date limit (perpetual)
+        };
+        const mockUser = { points: 100 };
+
+        prisma.reward.findUnique.mockResolvedValue(mockReward);
+        prisma.user.findUnique.mockResolvedValue(mockUser);
+        prisma.redemption.findUnique.mockResolvedValue(null);
+        prisma.$transaction.mockResolvedValue([{}, {}, { id: 1 }]);
+
+        const result = await RedeemService.redeemReward(1, 1);
+        expect(result).toBeDefined();
+    });
+
+    // Edge case: both null should allow redemption
+    test('should allow redemption when both dates are null', async () => {
+        jest.setSystemTime(new Date('2025-06-15T10:00:00.000Z'));
+
+        const mockReward = {
+            id: 1,
+            points_required: 20,
+            stock: 10,
+            redeem_start_date: null,
+            redeem_end_date: null,
+        };
+        const mockUser = { points: 100 };
+
+        prisma.reward.findUnique.mockResolvedValue(mockReward);
+        prisma.user.findUnique.mockResolvedValue(mockUser);
+        prisma.redemption.findUnique.mockResolvedValue(null);
+        prisma.$transaction.mockResolvedValue([{}, {}, { id: 1 }]);
+
+        const result = await RedeemService.redeemReward(1, 1);
+        expect(result).toBeDefined();
+    });
+
+    // Verify that service uses correct select fields
+    test('should query reward with required fields only', async () => {
+        jest.setSystemTime(new Date('2025-06-15T10:00:00.000Z'));
+
+        const mockReward = {
+            id: 1,
+            points_required: 50,
+            stock: 10,
+            redeem_start_date: new Date('2025-01-01'),
+            redeem_end_date: new Date('2025-12-31'),
+        };
+        const mockUser = { points: 100 };
+
+        prisma.reward.findUnique.mockResolvedValue(mockReward);
+        prisma.user.findUnique.mockResolvedValue(mockUser);
+        prisma.redemption.findUnique.mockResolvedValue(null);
+        prisma.$transaction.mockResolvedValue([{}, {}, { id: 1 }]);
+
+        await RedeemService.redeemReward(1, 1);
+
+        // Verify that findUnique was called with select containing required fields
+        expect(prisma.reward.findUnique).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: { id: 1 },
+                select: expect.objectContaining({
+                    id: true,
+                    points_required: true,
+                    redeem_start_date: true,
+                    redeem_end_date: true,
+                    stock: true,
+                })
+            })
+        );
+    });
 });
