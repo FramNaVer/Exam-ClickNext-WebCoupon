@@ -1,13 +1,12 @@
-const prisma = require('../lib/prisma');
 const AppError = require('../utils/appError');
+const adminService = require('../services/adminService'); // For user management
+const rewardsService = require('../services/rewardsService'); // For reward management
+const uploadService = require('../services/uploadService'); // For image uploads
 
 // GET /api/admin/users
 exports.getUsers = async (req, res, next) => {
     try {
-        const users = await prisma.user.findMany({
-            select: { id: true, username: true, role: true, provider: true, points: true, created_at: true },
-            orderBy: { created_at: 'desc' },
-        });
+        const users = await adminService.getUsers();
         res.json({ success: true, users });
     } catch (error) {
         next(error);
@@ -19,16 +18,7 @@ exports.updateUserRole = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { role } = req.body;
-
-        if (!['user', 'admin'].includes(role)) {
-            throw new AppError('Invalid role', 400);
-        }
-
-        const user = await prisma.user.update({
-            where: { id: Number(id) },
-            data: { role },
-            select: { id: true, username: true, role: true },
-        });
+        const user = await adminService.updateUserRole(id, role);
         res.json({ success: true, user });
     } catch (error) {
         next(error);
@@ -40,16 +30,7 @@ exports.updateUserPoints = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { points } = req.body;
-
-        if (typeof points !== 'number') {
-            throw new AppError('Points must be a number', 400);
-        }
-
-        const user = await prisma.user.update({
-            where: { id: Number(id) },
-            data: { points },
-            select: { id: true, username: true, points: true },
-        });
+        const user = await adminService.updateUserPoints(id, points);
         res.json({ success: true, user });
     } catch (error) {
         next(error);
@@ -59,7 +40,7 @@ exports.updateUserPoints = async (req, res, next) => {
 // GET /api/admin/rewards
 exports.getRewards = async (req, res, next) => {
     try {
-        const rewards = await prisma.reward.findMany({ orderBy: { created_at: 'desc' } });
+        const rewards = await rewardsService.getAllRewardsForAdmin();
         res.json({ success: true, rewards });
     } catch (error) {
         next(error);
@@ -69,18 +50,16 @@ exports.getRewards = async (req, res, next) => {
 // POST /api/admin/rewards
 exports.createReward = async (req, res, next) => {
     try {
-        const { title, description, points_required, image_url, expiry_date, redeem_start_date, redeem_end_date, terms_condition, stock } = req.body;
+        const rewardData = { ...req.body };
 
-        const reward = await prisma.reward.create({
-            data: {
-                title, description, points_required, image_url,
-                expiry_date: new Date(expiry_date),
-                redeem_start_date: new Date(redeem_start_date),
-                redeem_end_date: new Date(redeem_end_date),
-                terms_condition,
-                stock,
-            },
-        });
+        // If a file is uploaded, upload it to Cloudinary and get the URL
+        if (req.file) {
+            const uploadResult = await uploadService.uploadImageStream(req.file);
+            rewardData.image_url = uploadResult.secure_url;
+            rewardData.public_id = uploadResult.public_id;
+        }
+
+        const reward = await rewardsService.createReward(rewardData);
         res.status(201).json({ success: true, reward });
     } catch (error) {
         next(error);
@@ -91,12 +70,24 @@ exports.createReward = async (req, res, next) => {
 exports.updateReward = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const data = { ...req.body };
-        if (data.expiry_date) data.expiry_date = new Date(data.expiry_date);
-        if (data.redeem_start_date) data.redeem_start_date = new Date(data.redeem_start_date);
-        if (data.redeem_end_date) data.redeem_end_date = new Date(data.redeem_end_date);
+        const rewardData = { ...req.body };
 
-        const reward = await prisma.reward.update({ where: { id: Number(id) }, data });
+        if (req.file) {
+            // To prevent orphaned images, first find the existing reward
+            const existingReward = await rewardsService.getRewardsById(Number(id));
+
+            // Then, upload the new image
+            const uploadResult = await uploadService.uploadImageStream(req.file);
+            rewardData.image_url = uploadResult.secure_url;
+            rewardData.public_id = uploadResult.public_id;
+
+            // If the old reward had an image, delete it from Cloudinary
+            if (existingReward && existingReward.public_id) {
+                await uploadService.deleteImage(existingReward.public_id);
+            }
+        }
+
+        const reward = await rewardsService.updateReward(id, rewardData);
         res.json({ success: true, reward });
     } catch (error) {
         next(error);
@@ -107,7 +98,14 @@ exports.updateReward = async (req, res, next) => {
 exports.deleteReward = async (req, res, next) => {
     try {
         const { id } = req.params;
-        await prisma.reward.delete({ where: { id: Number(id) } });
+
+        // Fetch the reward to get its public_id before deleting from DB
+        const rewardToDelete = await rewardsService.getRewardsById(Number(id));
+        if (rewardToDelete && rewardToDelete.public_id) {
+            await uploadService.deleteImage(rewardToDelete.public_id);
+        }
+
+        await rewardsService.deleteReward(id);
         res.json({ success: true, message: 'Reward deleted' });
     } catch (error) {
         next(error);
