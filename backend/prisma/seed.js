@@ -81,16 +81,17 @@ async function main() {
     console.log('Rewards seeded successfully');
 
     const users = [
-        { username: 'testuser1', password: 'password123', points: 1000 },
-        { username: 'testuser2', password: 'password123', points: 250 },
+        { username: 'admin', password: 'admin1234', points: 0, role: 'admin' },
+        { username: 'testuser1', password: 'password123', points: 1000, role: 'user' },
+        { username: 'testuser2', password: 'password123', points: 250, role: 'user' },
     ];
 
     for (const u of users) {
         const hashed = await bcrypt.hash(u.password, 10);
         await prisma.user.upsert({
             where: { username: u.username },
-            update: { points: u.points },
-            create: { username: u.username, password: hashed, points: u.points },
+            update: { points: u.points, role: u.role },
+            create: { username: u.username, password: hashed, points: u.points, role: u.role },
         });
     }
 

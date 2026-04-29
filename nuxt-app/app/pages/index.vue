@@ -1,95 +1,42 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
-const authStore = useAuthStore()
 const { rewards, loading, error, fetchRewards } = useRewards()
-
 onMounted(fetchRewards)
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50">
-        <!-- Navbar -->
-        <div class="bg-white border-b border-zinc-100 px-6 pt-5 pb-3 sticky top-0 z-10 ">
-            <div class="flex items-center justify-between">
-                <!-- Left: App name -->
-                <div class="flex items-center gap-2 px-2">
-                    <div class="bg-zinc-900 rounded-xl p-1.5">
-                        <UIcon name="i-heroicons-sparkles" class="w-5 h-5 text-yellow-400" />
-                    </div>
-                    <span class="text-lg font-bold text-zinc-900 tracking-tight">SnapReward</span>
-                </div>
-                <!-- Right: Username + Points -->
-                <div class="flex items-center gap-3 px-2">
-                    <div class="text-right">
-                        <p class="text-xs text-zinc-400 leading-none">Welcome back,</p>
-                        <p class="text-sm font-semibold text-zinc-900 leading-tight">{{ authStore.user?.username }}</p>
-                    </div>
-                    <div class="flex items-center gap-1.5 bg-zinc-900 rounded-xl px-3 py-1.5">
-                        <UIcon name="i-heroicons-star-solid" class="w-4 h-4 text-yellow-400" />
-                        <span class="text-white font-bold text-sm">{{ authStore.user?.points?.toLocaleString() ?? '—' }}</span>
-                        <span class="text-zinc-400 text-xs">pts</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="min-h-screen bg-zinc-50">
+        <div class="max-w-5xl mx-auto px-6 py-6">
 
-        <!-- Rewards list -->
-        <div class="max-w-xl mx-auto px-4 py-6">
             <h2 class="text-lg font-semibold text-zinc-900 mb-4">Available Rewards</h2>
 
             <!-- Loading -->
-            <div v-if="loading" class="grid grid-cols-2 gap-4">
-                <div v-for="i in 4" :key="i" class="bg-white rounded-2xl overflow-hidden animate-pulse">
-                    <div class="w-full aspect-[4/3] bg-zinc-100" />
-                    <div class="p-4 space-y-2">
-                        <div class="h-4 bg-zinc-100 rounded w-3/4 mx-auto" />
-                        <div class="h-3 bg-zinc-100 rounded w-1/2 mx-auto" />
+            <div v-if="loading" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div v-for="i in 8" :key="i"
+                    class="bg-white rounded-2xl overflow-hidden border border-zinc-100 animate-pulse">
+                    <div class="w-full aspect-square bg-zinc-100" />
+                    <div class="p-3 space-y-2">
+                        <div class="h-3.5 bg-zinc-100 rounded w-4/5" />
+                        <div class="h-3 bg-zinc-100 rounded w-2/5" />
                     </div>
                 </div>
             </div>
 
             <!-- Error -->
-            <UAlert
-                v-else-if="error"
-                color="error"
-                variant="soft"
-                :description="error"
-                class="mb-4"
-            />
+            <UAlert v-else-if="error" color="error" variant="soft" :description="error" class="mb-4" />
 
             <!-- Empty -->
-            <div
-                v-else-if="rewards.length === 0"
-                class="text-center text-zinc-400 py-16"
-            >
-                <UIcon name="i-heroicons-gift" class="w-12 h-12 mx-auto mb-3 opacity-40" />
-                <p>No rewards available</p>
+            <div v-else-if="rewards.length === 0" class="text-center text-zinc-400 py-20">
+                <UIcon name="i-heroicons-gift" class="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p class="text-sm">No rewards available</p>
             </div>
 
-            <!-- List -->
-            <div v-else class="grid grid-cols-2 gap-4">
-                <NuxtLink
-                    v-for="reward in rewards"
-                    :key="reward.id"
-                    :to="`/rewards/${reward.id}`"
-                    class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow active:scale-[0.97] transition-transform flex flex-col"
-                >
-                    <div class="w-full aspect-[4/3] bg-zinc-100 flex items-center justify-center overflow-hidden">
-                        <img
-                            v-if="reward.image_url"
-                            :src="reward.image_url"
-                            :alt="reward.title"
-                            class="w-full h-full object-cover"
-                        />
-                        <UIcon v-else name="i-heroicons-gift" class="w-10 h-10 text-zinc-400" />
-                    </div>
-                    <div class="p-4 text-center flex flex-col flex-1">
-                        <p class="font-semibold text-zinc-900 text-sm leading-tight line-clamp-2 flex-1">{{ reward.title }}</p>
-                        <p class="text-sm font-bold text-zinc-900 mt-2">{{ reward.points_required.toLocaleString() }} <span class="font-normal text-zinc-400 text-xs">pts</span></p>
-                    </div>
-                </NuxtLink>
+            <!-- Grid -->
+            <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <RewardCard v-for="reward in rewards" :key="reward.id" :reward="reward" />
             </div>
+
         </div>
     </div>
 </template>

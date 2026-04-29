@@ -8,6 +8,7 @@ exports.getUserProfile = async (userId) => {
             id: true,
             username: true,
             points: true,
+            role: true,
         }
     })
 
