@@ -12,6 +12,9 @@ export const useAuthStore = defineStore('auth', () => {
     const error = ref('')
 
     const config = useRuntimeConfig()
+    const baseUrl = (): string => import.meta.server
+        ? ((config as any).apiBaseUrl as string) || config.public.apiBaseUrl
+        : config.public.apiBaseUrl
     const token = useCookie<string | null>('auth_token', {
         maxAge: 60 * 15, // 15 minutes
         sameSite: 'lax',
@@ -36,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function refresh() {
         if (!refreshToken.value) throw new Error('No refresh token')
         const data = await $fetch<{ success: boolean; token: string; refreshToken: string }>(
-            `${config.public.apiBaseUrl}/api/auth/refresh`,
+            `${baseUrl()}/api/auth/refresh`,
             { method: 'POST', body: { refreshToken: refreshToken.value } }
         )
         token.value = data.token
@@ -58,7 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
         try {
             const data = await $fetch<{ success: boolean; user: User }>(
-                `${config.public.apiBaseUrl}/api/user/profile`,
+                `${baseUrl()}/api/user/profile`,
                 { headers: authHeaders() }
             )
             user.value = data.user
@@ -70,7 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function login(username: string, password: string) {
         const data = await $fetch<{ success: boolean; token: string; refreshToken: string; user: User }>(
-            `${config.public.apiBaseUrl}/api/auth/login`,
+            `${baseUrl()}/api/auth/login`,
             { method: 'POST', body: { username, password } }
         )
         token.value = data.token
@@ -100,7 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function logout() {
         try {
             if (refreshToken.value) {
-                await $fetch(`${config.public.apiBaseUrl}/api/auth/logout`, {
+                await $fetch(`${baseUrl()}/api/auth/logout`, {
                     method: 'POST',
                     body: { refreshToken: refreshToken.value }
                 })

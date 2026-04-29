@@ -9,7 +9,10 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    // server-only: used by SSR middleware/server-side $fetch (Docker internal DNS)
+    apiBaseUrl: process.env.NUXT_API_BASE_URL || 'http://localhost:8080',
     public: {
+      // client + SSR fallback: browser uses this
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
     }
   },
