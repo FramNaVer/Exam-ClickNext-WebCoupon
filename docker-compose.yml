@@ -3,7 +3,9 @@ version: '3.8'
 services:
   # ─── Backend (Express) ──────────────────────────────────
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: coupon_backend
     restart: unless-stopped
     environment:
@@ -17,7 +19,9 @@ services:
 
   # ─── Frontend (Nuxt) ────────────────────────────────────
   frontend:
-    build: ./nuxt-app
+    build:
+      context: .
+      dockerfile: nuxt-app/Dockerfile
     container_name: coupon_frontend
     restart: unless-stopped
     environment:
