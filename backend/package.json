@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No tests yet\" && exit 0",
+    "test": "jest",
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed": "node prisma/seed.js"
@@ -29,6 +29,8 @@
     "prisma": "^7.5.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0"
+    "@types/bcrypt": "^6.0.0",
+    "jest": "^30.3.0",
+    "jest-mock-extended": "^4.0.1"
   }
 }
