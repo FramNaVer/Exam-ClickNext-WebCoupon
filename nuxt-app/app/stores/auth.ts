@@ -1,5 +1,3 @@
-import error from '#build/ui/error'
-import { is, lo } from '@nuxt/ui/runtime/locale/index.js'
 import { defineStore } from 'pinia'
 
 interface User {
@@ -48,7 +46,15 @@ export const useAuthStore = defineStore('auth', () => {
     async function fetchCurrentUser() {
         if (!token.value && !refreshToken.value) return
         if (!token.value) {
-            try { await refresh() } catch { logout(); return }
+            try {
+                await refresh()
+            } catch {
+                // refresh token หมดอายุ — ล้าง state แต่ไม่ navigate (ให้ middleware จัดการ)
+                token.value = null
+                refreshToken.value = null
+                user.value = null
+                return
+            }
         }
         try {
             const data = await $fetch<{ success: boolean; user: User }>(
@@ -89,7 +95,6 @@ export const useAuthStore = defineStore('auth', () => {
             loading.value = false
         }
 
-        return {LoginAction, error, loading, isAdmin, isUser}
     }
 
     async function logout() {
@@ -104,7 +109,8 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = null
         refreshToken.value = null
         user.value = null
-        navigateTo('/login')
+        // ไม่เรียก navigateTo ที่นี่ — ถ้าเรียกโดยไม่ await ใน async context จะเป็น unhandled rejection
+        // ให้ component หรือ middleware ที่เรียก logout() จัดการ navigation เอง
     }
 
 

@@ -6,6 +6,11 @@ const { history, loading, error, fetchHistory } = useProfile()
 
 onMounted(fetchHistory)
 
+async function handleLogout() {
+    await authStore.logout()
+    await navigateTo('/login')
+}
+
 function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString('th-TH', {
         year: 'numeric', month: 'short', day: 'numeric',
@@ -24,7 +29,7 @@ function formatDate(dateStr: string) {
                 </div>
                 <button
                     class="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 transition-colors px-3 py-2 rounded-xl hover:bg-zinc-100"
-                    @click="authStore.logout()"
+                    @click="handleLogout"
                 >
                     <UIcon name="i-heroicons-arrow-right-on-rectangle" class="w-4 h-4" />
                     Logout

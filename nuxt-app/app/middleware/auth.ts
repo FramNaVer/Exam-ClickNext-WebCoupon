@@ -1,33 +1,26 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
-  // ใช้ useCookie เพื่อดึงค่าจาก Browser โดยตรง (Nuxt จะจัดการให้ทั้ง Client/Server)
-  const token = useCookie('auth_token')
 
-  // 1. ถ้าไม่มี Token เลย แสดงว่าไม่ได้ Login แน่นอน
-  if (!token.value) {
-    if (to.path !== '/login') {
-      return navigateTo('/login')
-    }
+  // เช็ค isAuthenticated ซึ่งดู ทั้ง auth_token และ refresh_token
+  // ทำให้ถ้า auth_token หมดอายุแต่ยังมี refresh_token อยู่ จะไม่ถูก kick ออกทันที
+  if (!authStore.isAuthenticated) {
+    if (to.path !== '/login') return navigateTo('/login')
     return
   }
 
-  // 2. ถ้ามี Token แต่ไม่มีข้อมูล User (กรณี Refresh หน้า)
-  // ต้อง await เพื่อเติมข้อมูลกลับเข้า Store ให้เสร็จก่อนเดินหน้าต่อ
+  // user เป็น null หลัง page refresh → ดึงข้อมูลใหม่ (fetchCurrentUser จะ refresh token ถ้าจำเป็น)
   if (!authStore.user) {
-    try {
-      await authStore.fetchCurrentUser()
-    } catch (error) {
-      // ถ้า Token หมดอายุ หรือดึง Profile ไม่ได้ ให้เตะออก
-      return navigateTo('/login')
-    }
+    await authStore.fetchCurrentUser()
   }
 
-  // 3. เมื่อได้ข้อมูล User มาแล้ว (authStore.user ไม่เป็น null แล้ว)
-  // ค่อยเช็คสิทธิ์การเข้าถึงหน้า Admin
+  // ถ้าหลัง fetch แล้วยังไม่มี user (token หมดอายุทั้งคู่) → ไป login
+  if (!authStore.user) {
+    if (to.path !== '/login') return navigateTo('/login')
+    return
+  }
+
   if (authStore.isAdmin && !to.path.startsWith('/admin')) {
-    if (to.path !== '/login') {
-      return navigateTo('/admin')
-    }
+    if (to.path !== '/login') return navigateTo('/admin')
   }
 
   if (!authStore.isAdmin && to.path.startsWith('/admin')) {
