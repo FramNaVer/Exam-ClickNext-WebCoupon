@@ -11,7 +11,7 @@ jest.mock('../lib/prisma', () => ({
         findMany: jest.fn(),
         update: jest.fn(),
         create: jest.fn(),
-        deleteMany: jest.fn(),
+        delete: jest.fn(),
     },
 }));
 
@@ -159,4 +159,109 @@ describe('RewardsService', () => {
         );
     });
 
+    test('Create reward with invalid stock throws error', async () => {
+        await expect(rewardsService.createReward({
+            title: 'Invalid Reward',
+            points_required: 50,
+            stock: '-10',
+        })).rejects.toThrow(
+            new AppError('Stock must be a valid non-negative number.', 400)
+        );
+    });
+
+    //Get Reward For Admin tests can be added here similarly
+    test('Get all rewards for admin successfully', async () => {
+        const mockRewards = [
+            { id: 1, title: 'Reward 1', points_required: 100 },
+            { id: 2, title: 'Reward 2', points_required: 200 },
+        ];
+
+        prisma.reward.findMany.mockResolvedValue(mockRewards);
+
+        const result = await rewardsService.getAllRewardsForAdmin();
+
+        expect(result).toEqual(mockRewards);
+        expect(prisma.reward.findMany).toHaveBeenCalledTimes(1);
+        expect(prisma.reward.findMany).toHaveBeenCalledWith({ orderBy: { created_at: 'desc' } });
+    });
+
+    test('update reward successfully', async () => {
+        const rewardId = 1;
+        const updateData = {
+            title: 'Updated Reward',
+            points_required: '200',
+            stock: '30',
+        };
+        const updatedReward = { id: rewardId, ...updateData, points_required: 200, stock: 30 };
+
+        prisma.reward.update.mockResolvedValue(updatedReward);
+
+        const result = await rewardsService.updateReward(rewardId, updateData);
+        expect(result).toEqual(updatedReward);
+        expect(prisma.reward.update).toHaveBeenCalledTimes(1);
+        expect(prisma.reward.update).toHaveBeenCalledWith({
+            where: { id: rewardId },
+            data: expect.objectContaining({
+                title: updateData.title,
+                points_required: 200,
+                stock: 30,
+            })
+        });
+    });
+
+    test('update reward with invalid points or stock throws error', async () => {
+        await expect(rewardsService.updateReward(1, {
+            points_required: '-100',
+            stock: 10,
+        })).rejects.toThrow(
+            new AppError('Points required must be a valid non-negative number.', 400)
+        );
+    });
+
+    test('update reward with invalid stock throws error', async () => {
+        await expect(rewardsService.updateReward(1, {
+            points_required: 100,
+            stock: '-10',
+        })).rejects.toThrow(
+            new AppError('Stock must be a valid non-negative number.', 400)
+        );
+    });
+
+    test('update reward with no fields to update returns existing reward', async () => {
+        const rewardId = 1;
+        const existingReward = { 
+            id: rewardId, 
+            title: 'Existing Reward', 
+            points_required: 100, 
+            stock: 10 
+        };
+
+        prisma.reward.update.mockResolvedValue(existingReward);
+
+        const result = await rewardsService.updateReward(rewardId, {});
+        expect(result).toEqual(existingReward);
+        expect(prisma.reward.update).toHaveBeenCalledTimes(1);
+        expect(prisma.reward.update).toHaveBeenCalledWith({
+            where: { id: rewardId },
+            data: {}
+        });
+    });
+
+    test('delete reward successfully', async () => {
+        const rewardId = 1;
+        const deleteReward = {
+            id: rewardId,
+            title: 'Deleted Reward',
+            points_required: 100,
+            stock: 10,
+        };
+
+        prisma.reward.delete.mockResolvedValue(deleteReward);
+
+        const result = await rewardsService.deleteReward(rewardId);
+        expect(result).toEqual(deleteReward);
+        expect(prisma.reward.delete).toHaveBeenCalledTimes(1);
+        expect(prisma.reward.delete).toHaveBeenCalledWith({ where: { id: rewardId } });
+        
+    });
 });
