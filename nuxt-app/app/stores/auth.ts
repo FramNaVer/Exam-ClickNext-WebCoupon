@@ -1,3 +1,5 @@
+import error from '#build/ui/error'
+import { is, lo } from '@nuxt/ui/runtime/locale/index.js'
 import { defineStore } from 'pinia'
 
 interface User {
@@ -8,6 +10,9 @@ interface User {
 }
 
 export const useAuthStore = defineStore('auth', () => {
+    const loading = ref(false)
+    const error = ref('')
+
     const config = useRuntimeConfig()
     const token = useCookie<string | null>('auth_token', {
         maxAge: 60 * 15, // 15 minutes
@@ -25,6 +30,10 @@ export const useAuthStore = defineStore('auth', () => {
     function authHeaders(): Record<string, string> {
         return token.value ? { Authorization: `Bearer ${token.value}` } : {}
     }
+
+    // Role-based computed properties
+    const isAdmin = computed(() => user.value?.role === 'admin')
+    const isUser = computed(() => user.value?.role === 'user')
 
     async function refresh() {
         if (!refreshToken.value) throw new Error('No refresh token')
@@ -61,6 +70,26 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = data.token
         refreshToken.value = data.refreshToken
         user.value = data.user
+        // console.log("Store: Login Success, User Role is:", data.user.role)
+    }
+
+    async function LoginAction(username: string, password: string) {
+        error.value = ''
+        loading.value = true
+
+        try {
+            await login(username, password)
+            const target = isAdmin.value ? '/admin' : '/'
+            return await navigateTo(target)
+
+        } catch (e: any) {
+            if (isNuxtError(e) || e.message?.includes('redirect')) throw e
+            error.value = e?.data?.message || 'Invalid username or password'
+        } finally {
+            loading.value = false
+        }
+
+        return {LoginAction, error, loading, isAdmin, isUser}
     }
 
     async function logout() {
@@ -71,12 +100,13 @@ export const useAuthStore = defineStore('auth', () => {
                     body: { refreshToken: refreshToken.value }
                 })
             }
-        } catch {}
+        } catch { }
         token.value = null
         refreshToken.value = null
         user.value = null
         navigateTo('/login')
     }
 
-    return { token, refreshToken, user, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, logout }
+
+    return { token, refreshToken, user, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, LoginAction, logout, isAdmin, isUser }
 })
