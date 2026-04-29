@@ -7,23 +7,7 @@ const error = ref('')
 const loading = ref(false)
 
 async function handleLogin() {
-    error.value = ''
-    loading.value = true
-    try {
-        await authStore.login(form.username, form.password)
-
-        const target = authStore.isAdmin ? '/admin' : '/'
-        return await navigateTo(target)
-
-    } catch (e: any) {
-        if (isNuxtError(e) || e.message?.includes('redirect')) {
-            throw e
-        }
-        console.error("Actual Login Error:", e)
-        error.value = e?.data?.message || 'Invalid username or password'
-    } finally {
-        loading.value = false
-    }
+    await authStore.LoginAction(form.username, form.password)
 }
 
 const slides = [

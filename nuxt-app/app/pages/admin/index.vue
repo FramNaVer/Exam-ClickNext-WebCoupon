@@ -1,7 +1,8 @@
 <script setup>
 // ไม่ต้อง import auth จาก middleware เอง Nuxt จัดการให้ผ่าน definePageMeta
 definePageMeta({ 
-    middleware: 'auth' 
+    middleware: 'auth' ,
+    layout: 'admin'
 })
 
 const authStore = useAuthStore()
