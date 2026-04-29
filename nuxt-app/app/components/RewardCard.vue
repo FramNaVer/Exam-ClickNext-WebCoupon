@@ -27,7 +27,7 @@ defineProps<{
                 {{ reward.title }}
             </p>
             <div class="flex items-center gap-1 mt-0.5">
-                <UIcon name="i-heroicons-star-solid" class="w-3 h-3 text-yellow-400 flex-shrink-0" />
+                <UIcon name="i-heroicons-star-solid" class="w-3 h-3 text-yellow-400" />
                 <span class="text-sm font-bold text-zinc-900">
                     {{ reward.points_required.toLocaleString() }}
                 </span>

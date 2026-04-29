@@ -17,7 +17,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50 p-6">
+    <div class="min-h-screen p-6">
         <h1 class="text-2xl font-bold">Admin Panel</h1>
         
         <div v-if="loading">กำลังโหลด...</div>

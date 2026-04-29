@@ -36,7 +36,7 @@ async function handleLogout() {
 </script>
 
 <template>
-    <aside class="w-56 h-screen bg-white border-r border-zinc-100 flex flex-col flex-shrink-0">
+    <aside class="w-56 h-screen bg-white border-r border-zinc-100 flex flex-col ">
 
         <!-- Logo -->
         <div class="px-4 py-4 border-b border-zinc-100">
@@ -61,7 +61,7 @@ async function handleLogout() {
                 <NuxtLink v-for="item in section.items" :key="item.to" :to="item.to"
                     class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
                     :class="{ 'bg-zinc-100 text-zinc-900 font-medium': route.path === item.to }">
-                    <UIcon :name="item.icon" class="w-4 h-4 flex-shrink-0" />
+                    <UIcon :name="item.icon" class="w-4 h-4 " />
                     <span class="text-sm">{{ item.label }}</span>
                     <span v-if="item.badge" class="ml-auto text-[10px] px-2 py-0.5 rounded-full" :class="{
                         'bg-blue-50 text-blue-600': item.badgeColor === 'info',
@@ -74,7 +74,7 @@ async function handleLogout() {
         <!-- User Footer -->
         <div class="p-3 border-t border-zinc-100">
             <div class="flex items-center gap-2.5 px-2.5 py-2 bg-zinc-50 rounded-lg">
-                <div class="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center flex-shrink-0">
+                <div class="w-7 h-7 rounded-full bg-zinc-900 flex items-center justify-center">
                     <span class="text-[11px] font-medium text-white uppercase">
                         {{ authStore.user?.username?.charAt(0) }}
                     </span>
