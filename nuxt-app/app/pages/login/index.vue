@@ -2,7 +2,7 @@
 definePageMeta({ layout: 'auth' })
 
 const authStore = useAuthStore()
-const form = reactive({ username: '', password: '' })
+const form = reactive({ username: '', password: '', role: '' })
 const error = ref('')
 const loading = ref(false)
 
@@ -11,8 +11,15 @@ async function handleLogin() {
     loading.value = true
     try {
         await authStore.login(form.username, form.password)
-        await navigateTo('/')
+
+        const target = authStore.isAdmin ? '/admin' : '/'
+        return await navigateTo(target)
+
     } catch (e: any) {
+        if (isNuxtError(e) || e.message?.includes('redirect')) {
+            throw e
+        }
+        console.error("Actual Login Error:", e)
         error.value = e?.data?.message || 'Invalid username or password'
     } finally {
         loading.value = false
@@ -45,22 +52,14 @@ onUnmounted(() => clearInterval(timer))
             <!-- Image Slideshow -->
             <div class="relative w-full overflow-hidden rounded-2xl aspect-video mb-1 mt-1">
                 <template v-for="(slide, i) in slides" :key="i">
-                    <img
-                        :src="slide.src"
-                        :alt="slide.alt"
+                    <img :src="slide.src" :alt="slide.alt"
                         class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-                        :class="i === currentSlide ? 'opacity-100' : 'opacity-0'"
-                    />
+                        :class="i === currentSlide ? 'opacity-100' : 'opacity-0'" />
                 </template>
                 <!-- Dots -->
                 <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    <button
-                        v-for="(_, i) in slides"
-                        :key="i"
-                        class="w-1.5 h-1.5 rounded-full transition-all"
-                        :class="i === currentSlide ? 'bg-white w-4' : 'bg-white/40'"
-                        @click="currentSlide = i"
-                    />
+                    <button v-for="(_, i) in slides" :key="i" class="w-1.5 h-1.5 rounded-full transition-all"
+                        :class="i === currentSlide ? 'bg-white w-4' : 'bg-white/40'" @click="currentSlide = i" />
                 </div>
             </div>
 
@@ -94,35 +93,18 @@ onUnmounted(() => clearInterval(timer))
 
                 <form class="space-y-5" @submit.prevent="handleLogin">
                     <UFormField label="Username">
-                        <UInput
-                            v-model="form.username"
-                            placeholder="Enter your username"
-                            required
-                            size="lg"
-                            class="w-full"
-                        />
+                        <UInput v-model="form.username" placeholder="Enter your username" required size="lg"
+                            class="w-full" />
                     </UFormField>
 
                     <UFormField label="Password">
-                        <UInput
-                            v-model="form.password"
-                            type="password"
-                            placeholder="Enter your password"
-                            required
-                            size="lg"
-                            class="w-full"
-                        />
+                        <UInput v-model="form.password" type="password" placeholder="Enter your password" required
+                            size="lg" class="w-full" />
                     </UFormField>
 
                     <UAlert v-if="error" color="error" variant="soft" :description="error" />
 
-                    <UButton
-                        type="submit"
-                        block
-                        size="lg"
-                        :loading="loading"
-                        class="w-full mt-2"
-                    >
+                    <UButton type="submit" block size="lg" :loading="loading" class="w-full mt-2">
                         Sign In
                     </UButton>
                 </form>

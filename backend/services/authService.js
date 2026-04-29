@@ -42,7 +42,7 @@ exports.register = async ({ username, password }) => {
         data: { username, password: hashedPassword }
     })
 
-    return { success: true, message: 'User registered successfully', user: { id: newUser.id, username: newUser.username } };
+    return { success: true, message: 'User registered successfully', user: { id: newUser.id, username: newUser.username, role: newUser.role } };
 }
 
 exports.login = async ({ username, password }) => {
@@ -73,7 +73,9 @@ exports.login = async ({ username, password }) => {
         user: {
             id: user.id,
             username: user.username,
-            points: user.points
+            points: user.points,
+            role: user.role,
+            provider: user.provider
         }
     };
 

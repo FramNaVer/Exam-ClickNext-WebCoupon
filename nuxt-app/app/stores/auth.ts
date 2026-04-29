@@ -26,6 +26,10 @@ export const useAuthStore = defineStore('auth', () => {
         return token.value ? { Authorization: `Bearer ${token.value}` } : {}
     }
 
+     // Role-based computed properties
+    const isAdmin = computed(() => user.value?.role === 'admin')
+    const isUser = computed(() => user.value?.role === 'user')
+
     async function refresh() {
         if (!refreshToken.value) throw new Error('No refresh token')
         const data = await $fetch<{ success: boolean; token: string; refreshToken: string }>(
@@ -61,6 +65,8 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = data.token
         refreshToken.value = data.refreshToken
         user.value = data.user
+
+        console.log("Store: Login Success, User Role is:", data.user.role)
     }
 
     async function logout() {
@@ -78,5 +84,6 @@ export const useAuthStore = defineStore('auth', () => {
         navigateTo('/login')
     }
 
-    return { token, refreshToken, user, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, logout }
+
+    return { token, refreshToken, user, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, logout, isAdmin, isUser }
 })
