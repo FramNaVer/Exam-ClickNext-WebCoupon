@@ -1,0 +1,44 @@
+version: '3.8'
+
+# ไฟล์นี้ใช้บน VPS เท่านั้น — ดึง pre-built image จาก GHCR
+# IMAGE_TAG จะถูก set โดย CI/CD pipeline (short SHA)
+# ตัวอย่าง: IMAGE_TAG=abc1234 docker compose -f docker-compose.prod.yml up -d
+
+services:
+  backend:
+    image: ghcr.io/framnaver/exam-clicknext-webcoupon/backend:${IMAGE_TAG:-main}
+    container_name: coupon_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 8080
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+    ports:
+      - '8080:8080'
+    networks:
+      - coupon_network
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    image: ghcr.io/framnaver/exam-clicknext-webcoupon/frontend:${IMAGE_TAG:-main}
+    container_name: coupon_frontend
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL}
+    ports:
+      - '3000:3000'
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - coupon_network
+
+networks:
+  coupon_network:
+    driver: bridge
