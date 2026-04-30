@@ -25,7 +25,8 @@ services:
     container_name: coupon_frontend
     restart: unless-stopped
     environment:
-      NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL:-http://backend:8080}
+      NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+      NUXT_API_BASE_URL: http://backend:8080
     ports:
       - '3000:3000'
     depends_on:
