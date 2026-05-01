@@ -74,12 +74,12 @@ exports.getLogs = async ({page =1, limit= 20, level, action, startDate, endDate}
 
     // filter by date range
     if (startDate || endDate) {
-        where.timestamp = {};
+        where.created_at = {};
         if (startDate) {
-            where.timestamp.gte = new Date(startDate);
+            where.created_at.gte = new Date(startDate);
         }
         if (endDate) {
-            where.timestamp.lte = new Date(endDate);
+            where.created_at.lte = new Date(endDate);
         }
     }
 

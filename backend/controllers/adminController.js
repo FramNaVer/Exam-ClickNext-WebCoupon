@@ -143,6 +143,24 @@ exports.updateReward = async (req, res, next) => {
     }
 };
 
+// GET /api/admin/logs
+exports.getLogs = async (req, res, next) => {
+    try {
+        const { page, limit, level, action, startDate, endDate } = req.query;
+        const result = await adminService.getLogs({
+            page: page ? Number(page) : 1,
+            limit: limit ? Number(limit) : 20,
+            level: level || undefined,
+            action: action || undefined,
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
+        });
+        res.json({ success: true, ...result });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // DELETE /api/admin/rewards/:id
 exports.deleteReward = async (req, res, next) => {
     try {
@@ -173,32 +191,3 @@ exports.deleteReward = async (req, res, next) => {
 };
 
 
-//Get Logs with pagination and filters
-exports.getLogs = async (req, res, next) => {
-    try {
-        const { level, action, startDate, endDate } = req.query;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-
-        const results = await adminService.getLogs({
-            page,
-            limit,
-            level,
-            action,
-            startDate,
-            endDate
-        });
-
-        res.json({
-            success: true,
-            data: results.logs,
-            pagination: {
-                total: results.total,
-                page: results.page,
-                totalPages: results.totalPages
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
-};

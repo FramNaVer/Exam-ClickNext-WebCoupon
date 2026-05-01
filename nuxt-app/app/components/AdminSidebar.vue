@@ -29,7 +29,7 @@ const navSections = computed(() => [
         label: 'System',
         items: [
             { label: 'Settings', icon: 'i-heroicons-cog-6-tooth', to: '/admin/settings' },
-            { label: 'Logs', icon: 'i-heroicons-list-bullet', to: '/admin/logs' },
+            { label: 'Logs', icon: 'i-heroicons-list-bullet', to: '/admin/adminlogs' },
         ]
     },
 ])
