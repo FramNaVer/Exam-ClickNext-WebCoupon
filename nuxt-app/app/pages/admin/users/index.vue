@@ -45,10 +45,10 @@ async function saveUser(user: AdminUser) {
         const pointsChanged = editedPoints.value[user.id] !== String(user.points)
 
         if (roleChanged) {
-            await updateRole(user.id, editedRole.value[user.id])
+            await updateRole(user.id, editedRole.value[user.id] ?? user.role)
         }
         if (pointsChanged) {
-            const parsed = parseInt(editedPoints.value[user.id])
+            const parsed = parseInt(editedPoints.value[user.id] ?? '')
             if (isNaN(parsed) || parsed < 0) {
                 saveError.value = 'Points must be a valid non-negative number'
                 return

@@ -32,8 +32,8 @@ export const useAdminUsers = () => {
             `/api/admin/users/${userId}/role`,
             { method: 'PATCH', body: { role } }
         )
-        const idx = users.value.findIndex(u => u.id === userId)
-        if (idx !== -1) users.value[idx].role = data.user.role
+        const found = users.value.find(u => u.id === userId)
+        if (found) found.role = data.user.role
         return data.user
     }
 
@@ -42,8 +42,8 @@ export const useAdminUsers = () => {
             `/api/admin/users/${userId}/points`,
             { method: 'PATCH', body: { points } }
         )
-        const idx = users.value.findIndex(u => u.id === userId)
-        if (idx !== -1) users.value[idx].points = data.user.points
+        const found = users.value.find(u => u.id === userId)
+        if (found) found.points = data.user.points
         return data.user
     }
 
