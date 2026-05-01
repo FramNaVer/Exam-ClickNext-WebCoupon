@@ -1,14 +1,19 @@
 <!-- components/AdminSidebar.vue -->
-<script setup>
+<script setup lang="ts">
 const route = useRoute()
 const authStore = useAuthStore()
+const { users, fetchUsers } = useAdminUsers()
 
-const navSections = [
+const totalUsers = computed(() => users.value.length)
+
+onMounted(fetchUsers)
+
+const navSections = computed(() => [
     {
         label: 'Overview',
         items: [
             { label: 'Dashboard', icon: 'i-heroicons-squares-2x2', to: '/admin' },
-            { label: 'Users', icon: 'i-heroicons-users', to: '/admin/users', badge: '24', badgeColor: 'info' },
+            { label: 'Users', icon: 'i-heroicons-users', to: '/admin/users', badge: totalUsers.value, badgeColor: 'info' },
         ]
     },
     {
@@ -27,7 +32,7 @@ const navSections = [
             { label: 'Logs', icon: 'i-heroicons-list-bullet', to: '/admin/logs' },
         ]
     },
-]
+])
 
 async function handleLogout() {
     await authStore.logout()
@@ -63,7 +68,7 @@ async function handleLogout() {
                     :class="{ 'bg-zinc-100 text-zinc-900 font-medium': route.path === item.to }">
                     <UIcon :name="item.icon" class="w-4 h-4 " />
                     <span class="text-sm">{{ item.label }}</span>
-                    <span v-if="item.badge" class="ml-auto text-[10px] px-2 py-0.5 rounded-full" :class="{
+                    <span v-if="item.badge != null" class="ml-auto text-[10px] px-2 py-0.5 rounded-full" :class="{
                         'bg-blue-50 text-blue-600': item.badgeColor === 'info',
                         'bg-yellow-50 text-yellow-700': item.badgeColor === 'warning',
                     }">{{ item.badge }}</span>
