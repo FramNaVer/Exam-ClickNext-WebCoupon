@@ -17,4 +17,7 @@ router.post('/rewards', upload.single('image'), adminController.createReward);
 router.patch('/rewards/:id', upload.single('image'), adminController.updateReward);
 router.delete('/rewards/:id', adminController.deleteReward);
 
+//Logging
+// router.get('/logs', adminController.getLogs);
+
 module.exports = router;

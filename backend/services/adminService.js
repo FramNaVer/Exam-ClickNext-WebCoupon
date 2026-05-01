@@ -11,6 +11,15 @@ exports.getUsers = async () => {
     return users;
 }
 
+exports.getUserById = async (id) => {
+    const user = await prisma.user.findUnique({
+        where: { id: Number(id) },
+        select: { id: true, username: true, role: true, provider: true, points: true, created_at: true }
+    });
+    return user;
+}
+
+
 //Update user role
 exports.updateUserRole = async (userId, role) => {
     // Validate input
@@ -48,4 +57,46 @@ exports.updateUserPoints = async (userId, points) => {
     });
 
     return user;
+}
+
+exports.getLogs = async ({page =1, limit= 20, level, action, startDate, endDate} = {}) => {
+    const where = {};
+
+    // filter by level (info / warn / error)
+    if (level) {
+        where.level = level;
+    }
+
+    // filter by action type (USER_LOGIN, REWARD_DELETED ...)
+    if (action) {
+        where.action = action;
+    }
+
+    // filter by date range
+    if (startDate || endDate) {
+        where.timestamp = {};
+        if (startDate) {
+            where.timestamp.gte = new Date(startDate);
+        }
+        if (endDate) {
+            where.timestamp.lte = new Date(endDate);
+        }
+    }
+
+    const [logs, total] = await Promise.all([
+        prisma.activityLog.findMany({
+            where,
+            orderBy: { timestamp: 'desc' },
+            skip: (page - 1) * limit,
+            take: limit,
+        }),
+        prisma.activityLog.count({ where })
+    ])
+
+    return {
+        logs,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+    };
 }
