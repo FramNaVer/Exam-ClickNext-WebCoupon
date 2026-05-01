@@ -102,6 +102,15 @@ exports.refresh = async (refreshToken) => {
     return { success: true, token: accessToken, refreshToken: newRefreshToken };
 }
 
+exports.getUserFromRefreshToken = async (refreshToken) => {
+    if (!refreshToken) return null;
+    const stored = await prisma.refreshToken.findUnique({
+        where: { token: refreshToken },
+        include: { user: { select: { id: true, username: true } } }
+    });
+    return stored?.user ?? null;
+}
+
 exports.logout = async (refreshToken) => {
     if (refreshToken) {
         await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
