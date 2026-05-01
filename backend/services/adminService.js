@@ -86,7 +86,7 @@ exports.getLogs = async ({page =1, limit= 20, level, action, startDate, endDate}
     const [logs, total] = await Promise.all([
         prisma.activityLog.findMany({
             where,
-            orderBy: { timestamp: 'desc' },
+            orderBy: { created_at: 'desc' },
             skip: (page - 1) * limit,
             take: limit,
         }),

@@ -18,6 +18,6 @@ router.patch('/rewards/:id', upload.single('image'), adminController.updateRewar
 router.delete('/rewards/:id', adminController.deleteReward);
 
 //Logging
-// router.get('/logs', adminController.getLogs);
+router.get('/logs', adminController.getLogs);
 
 module.exports = router;
