@@ -2,7 +2,7 @@ const AppError = require('../utils/appError');
 const adminService = require('../services/adminService'); // For user management
 const rewardsService = require('../services/rewardsService'); // For reward management
 const uploadService = require('../services/uploadService'); // For image uploads
-const logActivity = require('../services/logService');
+const { logActivity } = require('../services/logService');
 
 // GET /api/admin/users
 exports.getUsers = async (req, res, next) => {

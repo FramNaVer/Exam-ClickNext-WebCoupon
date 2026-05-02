@@ -1,5 +1,5 @@
 const authService = require('../services/authService');
-const logActivity = require('../services/logService');
+const { logActivity } = require('../services/logService');
 
 exports.registerUser = async (req, res, next) => {
     try {

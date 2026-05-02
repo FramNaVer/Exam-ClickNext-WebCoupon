@@ -24,4 +24,16 @@ async function logActivity({
     }
 }
 
-module.exports = logActivity;
+async function cleanOldLogs(retentionDays = 90) {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - retentionDays)
+
+    const { count } = await prisma.activityLog.deleteMany({
+        where: { created_at: { lt: cutoff } }
+    })
+
+    console.log(`[LogCleanup] Deleted ${count} logs older than ${retentionDays} days`)
+    return count
+}
+
+module.exports = { logActivity, cleanOldLogs };
