@@ -172,8 +172,8 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
             cd /opt/coupon-staging
             export IMAGE_TAG="$IMAGE_TAG"
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
             docker image prune -f
             echo "Staging deployed: $IMAGE_TAG"
 
