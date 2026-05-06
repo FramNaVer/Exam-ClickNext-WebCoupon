@@ -1,5 +1,3 @@
-import error from '#build/ui/error'
-import { is, lo } from '@nuxt/ui/runtime/locale/index.js'
 import { defineStore } from 'pinia'
 
 interface User {
@@ -14,6 +12,9 @@ export const useAuthStore = defineStore('auth', () => {
     const error = ref('')
 
     const config = useRuntimeConfig()
+    const baseUrl = (): string => import.meta.server
+        ? ((config as any).apiBaseUrl as string) || config.public.apiBaseUrl
+        : config.public.apiBaseUrl
     const token = useCookie<string | null>('auth_token', {
         maxAge: 60 * 15, // 15 minutes
         sameSite: 'lax',
@@ -38,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function refresh() {
         if (!refreshToken.value) throw new Error('No refresh token')
         const data = await $fetch<{ success: boolean; token: string; refreshToken: string }>(
-            `${config.public.apiBaseUrl}/api/auth/refresh`,
+            `${baseUrl()}/api/auth/refresh`,
             { method: 'POST', body: { refreshToken: refreshToken.value } }
         )
         token.value = data.token
@@ -48,11 +49,19 @@ export const useAuthStore = defineStore('auth', () => {
     async function fetchCurrentUser() {
         if (!token.value && !refreshToken.value) return
         if (!token.value) {
-            try { await refresh() } catch { logout(); return }
+            try {
+                await refresh()
+            } catch {
+                // refresh token หมดอายุ — ล้าง state แต่ไม่ navigate (ให้ middleware จัดการ)
+                token.value = null
+                refreshToken.value = null
+                user.value = null
+                return
+            }
         }
         try {
             const data = await $fetch<{ success: boolean; user: User }>(
-                `${config.public.apiBaseUrl}/api/user/profile`,
+                `${baseUrl()}/api/user/profile`,
                 { headers: authHeaders() }
             )
             user.value = data.user
@@ -64,7 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function login(username: string, password: string) {
         const data = await $fetch<{ success: boolean; token: string; refreshToken: string; user: User }>(
-            `${config.public.apiBaseUrl}/api/auth/login`,
+            `${baseUrl()}/api/auth/login`,
             { method: 'POST', body: { username, password } }
         )
         token.value = data.token
@@ -89,13 +98,12 @@ export const useAuthStore = defineStore('auth', () => {
             loading.value = false
         }
 
-        return {LoginAction, error, loading, isAdmin, isUser}
     }
 
     async function logout() {
         try {
             if (refreshToken.value) {
-                await $fetch(`${config.public.apiBaseUrl}/api/auth/logout`, {
+                await $fetch(`${baseUrl()}/api/auth/logout`, {
                     method: 'POST',
                     body: { refreshToken: refreshToken.value }
                 })
@@ -104,9 +112,10 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = null
         refreshToken.value = null
         user.value = null
-        navigateTo('/login')
+        // ไม่เรียก navigateTo ที่นี่ — ถ้าเรียกโดยไม่ await ใน async context จะเป็น unhandled rejection
+        // ให้ component หรือ middleware ที่เรียก logout() จัดการ navigation เอง
     }
 
 
-    return { token, refreshToken, user, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, LoginAction, logout, isAdmin, isUser }
+    return { token, refreshToken, user, loading, error, isAuthenticated, authHeaders, refresh, fetchCurrentUser, login, LoginAction, logout, isAdmin, isUser }
 })

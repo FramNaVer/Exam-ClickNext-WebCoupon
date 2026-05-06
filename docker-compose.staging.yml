@@ -1,0 +1,44 @@
+version: '3.8'
+
+# ไฟล์นี้ใช้บน VPS staging — port ต่างจาก production เพื่อรันบน VPS เดียวกันได้
+# frontend: 3001  backend: 8081
+
+services:
+  backend:
+    image: ghcr.io/framnaver/exam-clicknext-webcoupon/backend:${IMAGE_TAG:-dev}
+    container_name: coupon_backend_staging
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 8080
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+    ports:
+      - '8081:8080'
+    networks:
+      - coupon_staging_network
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    image: ghcr.io/framnaver/exam-clicknext-webcoupon/frontend:${IMAGE_TAG:-dev}
+    container_name: coupon_frontend_staging
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: ${NUXT_PUBLIC_API_BASE_URL}
+      NUXT_API_BASE_URL: http://backend:8080
+    ports:
+      - '3001:3000'
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - coupon_staging_network
+
+networks:
+  coupon_staging_network:
+    driver: bridge

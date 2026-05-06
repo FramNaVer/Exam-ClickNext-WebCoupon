@@ -3,9 +3,14 @@ export const useApi = () => {
     const config = useRuntimeConfig()
     const authStore = useAuthStore()
 
+    // SSR uses private internal URL (Docker DNS: backend:8080), browser uses public URL
+    const baseUrl = () => import.meta.server
+        ? ((config as any).apiBaseUrl || config.public.apiBaseUrl)
+        : config.public.apiBaseUrl
+
     async function apiFetch<T>(path: string, options: Parameters<typeof $fetch>[1] = {}): Promise<T> {
         try {
-            return await $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
+            return await $fetch<T>(`${baseUrl()}${path}`, {
                 ...options,
                 headers: {
                     ...authStore.authHeaders(),
@@ -17,7 +22,7 @@ export const useApi = () => {
             if (e?.status === 401 && authStore.refreshToken) {
                 try {
                     await authStore.refresh()
-                    return await $fetch<T>(`${config.public.apiBaseUrl}${path}`, {
+                    return await $fetch<T>(`${baseUrl()}${path}`, {
                         ...options,
                         headers: {
                             ...authStore.authHeaders(),

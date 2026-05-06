@@ -6,6 +6,8 @@ const adminRoutes   = require('./adminRoutes');
 const { authLimiter } = require('../middleware/ratelimiter');
 
 const setupRoutes = (app) => {
+  app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+
   app.use('/api/auth',    authLimiter, authRoutes);
   app.use('/api/user',    userRoutes);
   app.use('/api/rewards', rewardRoutes);
