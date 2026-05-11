@@ -67,3 +67,18 @@ model Redemption {
   @@map("redemptions")
 }
 
+model ActivityLog {
+  id         Int     @id @default(autoincrement())
+  level      String // e.g., "info", "warning", "error"
+  action     String // e.g., "user_login", "reward_redeemed"
+  actor_id   Int?  // ID of the user or system that performed the action (null = system)
+  actor_name String? 
+  target_type String? // e.g., "user", "reward" , "redemption"
+  target_id   Int?  
+  message     String  // Detailed message about the activity
+  metadata    Json?   // Additional structured data about the activity
+  ip_address  String? // IP address from which the action was performed
+  created_at  DateTime @default(now())
+
+  @@map("activity_logs")
+}

@@ -6,6 +6,7 @@ const { generalLimiter, authLimiter } = require('./middleware/ratelimiter');
 require('dotenv').config();
 
 const setupRoutes = require('./routes/setupRoutes');
+const { startLogCleanupJob } = require('./jobs/logCleanup');
 
 if (!process.env.JWT_SECRET) {
     console.error('FATAL: JWT_SECRET is not defined in .env');
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use(generalLimiter);
 
 setupRoutes(app);
+startLogCleanupJob();
 
 app.use((err, req, res, next) => {
     const status = err.statusCode || 500;
