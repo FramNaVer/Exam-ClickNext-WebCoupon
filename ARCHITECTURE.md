@@ -307,7 +307,7 @@ flowchart TB
 
     subgraph ci["STAGE 1 — CI (รันขนานกัน)"]
         BCI["Backend<br/>npm ci → prisma generate → jest"]
-        FCI["Frontend<br/>npm ci → nuxi typecheck → vitest"]
+        FCI["Frontend<br/>npm ci → npm run typecheck → vitest"]
     end
 
     BR --> BCI
