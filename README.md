@@ -1,20 +1,35 @@
 # SnapReward 🎁
 
-A points-based reward redemption platform built with **Express.js** (backend) and **Nuxt 4** (frontend), deployed on **Railway** with **Neon PostgreSQL** database.
+A points-based reward redemption platform built with **Express.js** (backend) and **Nuxt 4** (frontend), containerized with **Docker** and deployed to a **VPS** via **GitHub Actions + GHCR**, backed by **Neon PostgreSQL**.
 
 ## 🏗️ Architecture
 
+```mermaid
+flowchart TB
+    BROWSER["🌐 Browser — Vue 3 hydrated"]
+
+    subgraph vps["🖥️ VPS — docker network coupon_network"]
+        FE["Nuxt 4 / Nitro<br/>:3000"]
+        BE["Express 5 API<br/>:8080"]
+    end
+
+    DB[("Neon PostgreSQL")]
+    CDN["Cloudinary"]
+
+    BROWSER -->|"1 request page"| FE
+    FE -->|"2 SSR fetch — internal DNS<br/>http://backend:8080"| BE
+    BROWSER -->|"3 REST + JWT — public URL"| BE
+    BE -->|"Prisma 7"| DB
+    BE -->|"upload / destroy"| CDN
+
+    style BROWSER fill:#e3f2fd,stroke:#1976d2
+    style FE fill:#e8f5e9,stroke:#2e7d32
+    style BE fill:#fff3e0,stroke:#ef6c00
+    style DB fill:#f3e5f5,stroke:#7b1fa2
+    style CDN fill:#fce4ec,stroke:#c2185b
 ```
-┌─────────────────────┐         ┌─────────────────────┐
-│   Nuxt 4 Frontend   │◄───────►│   Express Backend   │
-│   (Port 3000)       │  REST   │   (Port 8080)       │
-└─────────────────────┘         └──────────┬──────────┘
-                                           │
-                                           ▼
-                                   ┌─────────────────────┐
-                                   │  Neon PostgreSQL    │
-                                   └─────────────────────┘
-```
+
+📐 **[ดูเอกสารโครงสร้างระบบฉบับเต็ม → ARCHITECTURE.md](ARCHITECTURE.md)** — layered pattern, auth flow, ER diagram, CI/CD pipeline, environments
 
 ## 🛠️ Tech Stack
 
@@ -24,32 +39,46 @@ A points-based reward redemption platform built with **Express.js** (backend) an
 | Backend | Express.js, Prisma ORM |
 | Database | Neon PostgreSQL |
 | Image Storage | Cloudinary |
-| Deployment | Railway (CI/CD via GitHub) |
-| Testing | Jest (backend), Vitest (frontend) |
+| Logging | Winston (file) + `activity_logs` table + node-cron cleanup |
+| Container | Docker multi-stage (`node:22-alpine`, non-root) |
+| Registry | GitHub Container Registry (ghcr.io) |
+| Deployment | GitHub Actions → SSH → Docker Compose on VPS |
+| Testing | Jest (backend), Vitest + Playwright (frontend) |
 
 ## 📦 Project Structure
 
 ```
 Exam-ClickNext-WebCoupon/
 ├── backend/                 # Express API server
-│   ├── controllers/         # Route handlers
-│   ├── middleware/         # Auth, rate limit, upload
-│   ├── routes/             # API route definitions
-│   ├── services/           # Business logic
-│   ├── lib/                # Prisma, Cloudinary config
-│   ├── prisma/             # Schema & migrations
-│   └── tests/              # Unit tests (Jest)
+│   ├── server.js            # Entry: middleware chain + error handler
+│   ├── routes/              # API route definitions (setupRoutes.js รวมทั้งหมด)
+│   ├── controllers/         # Route handlers — req/res เท่านั้น
+│   ├── services/            # Business logic (จุดที่ unit test)
+│   ├── middleware/          # Auth, RBAC, rate limit, upload
+│   ├── lib/                 # Prisma, Cloudinary, Winston
+│   ├── jobs/                # node-cron — log cleanup
+│   ├── utils/               # AppError
+│   ├── prisma/              # Schema, migrations, seed
+│   └── tests/               # Unit tests (Jest)
 │
-├── nuxt-app/               # Nuxt 4 frontend
+├── nuxt-app/                # Nuxt 4 frontend
 │   ├── app/
-│   │   ├── components/     # Vue components
-│   │   ├── composables/    # Shared logic
-│   │   ├── pages/          # Route pages
-│   │   └── stores/         # Pinia stores
-│   └── tests/              # E2E & unit tests
+│   │   ├── pages/           # Route pages (file-based)
+│   │   ├── layouts/         # default / auth / admin
+│   │   ├── components/      # Vue components
+│   │   ├── composables/     # useApi + feature composables
+│   │   ├── middleware/      # Route guard
+│   │   └── stores/          # Pinia stores
+│   └── test/                # Vitest (unit + nuxt)
 │
-└── .github/workflows/      # CI/CD pipeline
+├── docker-compose.yml       # local (build จาก source)
+├── docker-compose.staging.yml
+├── docker-compose.prod.yml  # pull image จาก GHCR + healthcheck
+└── .github/workflows/       # CI/CD pipeline
 ```
+
+โครงสร้างชั้น backend เป็น **layered pattern**: `routes → controllers → services → prisma`
+แต่ละชั้นรู้จักเฉพาะชั้นถัดไป — service ไม่แตะ `req`/`res` จึงเทสได้โดยไม่ต้องเปิดเซิร์ฟเวอร์
 
 ## 🚀 Started
 
@@ -147,6 +176,12 @@ NUXT_PUBLIC_API_BASE_URL=http://localhost:8080
 | PATCH | `/api/admin/rewards/:id` | Update reward |
 | DELETE | `/api/admin/rewards/:id` | Delete reward |
 | POST | `/api/admin/upload-image` | Upload image to Cloudinary |
+| GET | `/api/admin/logs` | Activity logs (filter + pagination) |
+
+### System
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Health check (Docker healthcheck + CI) |
 
 ## 🔒 Security Features
 
@@ -166,12 +201,34 @@ cd backend && npm test
 cd nuxt-app && npm test
 ```
 
-## 🚢 Deployment (Railway)
+## 🚢 Deployment (GitHub Actions → GHCR → VPS)
 
-1. Connect GitHub repository to Railway
-2. Add environment variables in Railway dashboard
-3. Deploy both backend and frontend
-4. Set `ALLOWED_ORIGINS` to your frontend URL
+```
+feature/* ──PR──► dev ──auto──► Staging      (/opt/coupon-staging)
+                   └───PR────► main ──approve──► Production (/opt/coupon-app)
+```
+
+| Event | สิ่งที่เกิดขึ้น |
+|-------|----------------|
+| Pull Request | Backend tests + Frontend typecheck/unit tests เท่านั้น |
+| Push `dev` | CI → build & push images → deploy staging อัตโนมัติ |
+| Push `main` | CI → build & push images → **รอ approve** → deploy production → health check |
+
+Images ถูก tag ด้วย short SHA เสมอ — rollback ได้ด้วย:
+
+```bash
+cd /opt/coupon-app
+IMAGE_TAG=<previous-sha> docker compose -f docker-compose.prod.yml up -d
+```
+
+รายละเอียด pipeline, secrets ที่ต้องตั้ง และ environment matrix อยู่ใน [ARCHITECTURE.md](ARCHITECTURE.md#7-cicd-pipeline)
+
+### Run with Docker locally
+
+```bash
+# ต้องมี .env ที่ root (DATABASE_URL, JWT_SECRET, NUXT_PUBLIC_API_BASE_URL)
+docker compose up -d --build
+```
 
 ## 📄 License
 
